@@ -21,7 +21,13 @@ elif DATABASE_URL.startswith("postgresql://"):
         1
     )
 
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+engine = create_engine(DATABASE_URL)
+
+SessionLocal = sessionmaker(
+    autocommit=False,
+    autoflush=False,
+    bind=engine
+)
 Base = declarative_base()
 
 def generate_uuid():
