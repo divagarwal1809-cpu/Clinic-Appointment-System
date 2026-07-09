@@ -2,7 +2,7 @@
    ClinicFlow — Combined Patient Portal SPA JavaScript
    ============================================================ */
 
-const API = 'http://127.0.0.1:8000';
+const API = 'https://clinic-appointment-system-o71t.onrender.com';
 
 /* ============================================================
    UTILITIES
