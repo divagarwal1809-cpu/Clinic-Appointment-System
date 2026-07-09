@@ -6,16 +6,20 @@ from sqlalchemy.orm import sessionmaker, relationship
 
 import os
 
-DATABASE_URL = os.environ.get("DATABASE_URL") or "postgresql://neondb_owner:npg_s5BOH4vuNAWZ@ep-dawn-art-aosh50nx.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require"
+DATABASE_URL = os.environ["DATABASE_URL"]
 
-# Neon/Render URLs might start with postgres://, SQLAlchemy requires postgresql://
 if DATABASE_URL.startswith("postgres://"):
-    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
-
-if DATABASE_URL.startswith("sqlite"):
-    engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
-else:
-    engine = create_engine(DATABASE_URL)
+    DATABASE_URL = DATABASE_URL.replace(
+        "postgres://",
+        "postgresql+psycopg://",
+        1
+    )
+elif DATABASE_URL.startswith("postgresql://"):
+    DATABASE_URL = DATABASE_URL.replace(
+        "postgresql://",
+        "postgresql+psycopg://",
+        1
+    )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
