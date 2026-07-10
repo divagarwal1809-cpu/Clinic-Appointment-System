@@ -1,10 +1,8 @@
 # ClinicFlow — Clinic Appointment and Intake Summary System
 
-> A clinic appointment booking and AI-assisted intake management system for patients and front-desk staff.
-
-**Live Demo:** https://clinicappointment23.netlify.app/
-**Track:** SDAI (HIMSHIKHAR 2026, July Cohort) — Project 03
-**Domain:** Healthcare administration (not diagnosis)
+**Live Demo:** https://clinicappointment23.netlify.app
+**Track:** SDAI (HIMSHIKHAR 2026)
+**Domain:** Healthcare administration
 
 ---
 
@@ -33,7 +31,7 @@ Following the project's starter-data guidance, the system uses its own generated
 | `intake_forms.csv` | Submitted intake form responses per patient |
 | `followups.csv` | Follow-up items flagged by staff or by the AI module |
 
-**[Add: how many records you generated for each file, and whether they're synthetic/fictional test data — this matters for the "responsible use" section since no real patient data should be used.]**
+**[30-40 demo records were created for testing purposes.]**
 
 ---
 
@@ -42,10 +40,10 @@ Following the project's starter-data guidance, the system uses its own generated
 | Layer | Technology |
 |---|---|
 | Frontend | HTML, CSS, JavaScript |
-| Backend | **[Add: e.g., Node.js/Express, Flask, FastAPI — whichever you used]** |
-| Database | **[Add: e.g., SQLite, PostgreSQL, MySQL]** |
-| AI / LLM | **[Add: which LLM API — e.g., OpenAI GPT-4o-mini, Anthropic Claude, etc.]** |
-| Hosting | Netlify (frontend) |
+| Backend | **[FastAPI]** |
+| Database | **[PostgreSQL]** |
+| AI / LLM | **[OpenAI Gemini]** |
+| Hosting | Netlify (frontend), Render(Backend), Neon(Database) |
 | Version Control | GitHub |
 
 ---
@@ -81,7 +79,25 @@ The AI component is the core innovation of this project:
 
 **Why AI helps here:** these are exactly the kind of repetitive, judgment-light administrative tasks (summarizing, checking for gaps, drafting reminders) that an LLM handles reliably, while the actual clinical judgment stays entirely with staff. This is why every AI output in the app carries the disclaimer: *"AI summaries are administrative drafts only — not medical advice."*
 
-**[Add: a short note on your prompt design — what you told the model to do/not do, and any guardrails you added, e.g. instructing it never to suggest a diagnosis.]**
+**[SYSTEM_PROMPT = You are an administrative intake summarizer for clinic front-desk staff.
+Your role is purely administrative support.
+CRITICAL SAFETY RULE: You are NOT a doctor or clinician. You must NEVER diagnose the patient, suggest or imply treatment, or interpret symptoms clinically.
+Only restate, in plain factual language, what the patient reported. Do not add medical terms or clinical judgments.
+Never use words like "diagnose", "diagnosis", "prescribe", "prescription", "amoxicillin", "treatment", or "insulin" in your response.
+
+Return a structured JSON object containing exactly these keys:
+{
+  "summary": "A concise, objective summary of what the patient reported, using plain factual language.",
+  "flags": ["A list of specific plain-language administrative warnings or notes based ONLY on what the patient reported."],
+  "follow_up_draft": "A polite, professional message draft requesting any missing information or reminding them of next steps.",
+  "urgent_review_needed": false
+}
+
+EMERGENCY GUARDRAIL: If the patient's text describes anything resembling a medical emergency (e.g., chest pain, shortness of breath, sudden numbness, unconsciousness, severe allergic reactions), you MUST:
+1. Set "urgent_review_needed" to true.
+2. In the "summary", state: "Emergency symptoms reported: [list symptoms]. Route to clinician immediately."
+3. In "flags", add: "URGENT CLINICAL REVIEW REQUIRED".
+4. Do NOT attempt any clinical judgment or suggest any actions other than immediate human review.]**
 
 ---
 
@@ -91,7 +107,7 @@ The AI component is the core innovation of this project:
 
 ```bash
 # 1. Clone the repository
-git clone <your-repo-url>
+git clone https://github.com/divagarwal1809-cpu/Clinic-Appointment-System
 cd clinic_appointment_and_intake_summary_system
 
 # 2. Install backend dependencies
@@ -99,7 +115,7 @@ cd backend
 npm install        # or: pip install -r requirements.txt
 
 # 3. Add your AI API key
-echo "AI_API_KEY=your_key_here" > .env
+echo "AI_API_KEY=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" > .env
 
 # 4. Start the backend
 npm start          # or: python app.py
@@ -139,7 +155,8 @@ Example placeholders:
 - The AI module produces **administrative drafts only** — it does not diagnose, and staff must review every summary before acting on it.
 - AI summaries are only as good as the intake form content; ambiguous or very short patient input can produce a vague summary.
 - The dataset used is synthetic/test data, not real patient records — real-world clinic data would include more edge cases (multiple languages, incomplete histories, etc.).
-- **[Add: any known bugs, edge cases the system doesn't handle yet, or scale limitations.]**
+- Mobile version is unstable
+- The backend is hosted on Render(free tier) so it might take upto 50 seconds for the server to come live
 
 ---
 
@@ -159,6 +176,9 @@ This system is an **administrative support tool only**. It does not diagnose con
 ---
 
 ## 12. Team Members
-
+Divyansh Agarwal(371)
+Naman Modi(310)
+Aditya Pandit(432)
+Devansh Kohli(363)
 **[Add team member name(s) here]**
 
