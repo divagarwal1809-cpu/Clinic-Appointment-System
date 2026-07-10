@@ -163,7 +163,7 @@ def summarize_intake(
     # 2. Try Google Gemini API
     if gemini_key:
         try:
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={gemini_key}"
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={AQ.Ab8RN6KWqq55qcLVyl9xYaFXq9rFXkuu20SiVCIiHVMZLGOERw}"
             payload = {
                 "contents": [{"parts": [{"text": prompt_content}]}],
                 "systemInstruction": {"parts": [{"text": SYSTEM_PROMPT}]},
