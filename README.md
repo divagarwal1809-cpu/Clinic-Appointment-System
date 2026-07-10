@@ -180,5 +180,3 @@ Divyansh Agarwal(371)
 Naman Modi(310)
 Aditya Pandit(432)
 Devansh Kohli(363)
-**[Add team member name(s) here]**
-
