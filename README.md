@@ -127,10 +127,13 @@ Live version: (frontend only, connected to hosted backend): https://clinicappoin
 
 ## 7. Demo Screenshots
 
-<img width="1918" height="880" alt="image" src="https://github.com/user-attachments/assets/8ee74a0d-a45d-4957-8533-aea406d1fb42" /> `screenshots/dashboard.png`
-<img width="1918" height="906" alt="Screenshot 2026-07-10 150215" src="https://github.com/user-attachments/assets/49df32e7-b45c-41f6-8f29-812baad62a4c" /> `screenshots/book-appointment.png`
-<img width="1918" height="880" alt="Screenshot 2026-07-15 022359" src="https://github.com/user-attachments/assets/39a31e59-5999-4310-be5e-d84a19e7311b" /> `screenshots/ai-summary.png`
-<img width="1918" height="917" alt="Screenshot 2026-07-13 105619" src="https://github.com/user-attachments/assets/3ee613af-df79-4f4d-9c81-8e2bb7ebe6cc" /> `screenshots/appointments.png`
+<img width="1918" height="880" alt="image" src="https://github.com/user-attachments/assets/8ee74a0d-a45d-4957-8533-aea406d1fb42" /> `Dashboard`
+
+<img width="1918" height="906" alt="Screenshot 2026-07-10 150215" src="https://github.com/user-attachments/assets/49df32e7-b45c-41f6-8f29-812baad62a4c" /> `Appointment Booking`
+
+<img width="1918" height="880" alt="Screenshot 2026-07-15 022359" src="https://github.com/user-attachments/assets/39a31e59-5999-4310-be5e-d84a19e7311b" /> `AI Summary`
+
+<img width="1918" height="917" alt="Screenshot 2026-07-13 105619" src="https://github.com/user-attachments/assets/3ee613af-df79-4f4d-9c81-8e2bb7ebe6cc" /> `Appointments`
 
 ---
 
