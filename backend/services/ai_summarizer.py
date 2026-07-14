@@ -53,46 +53,96 @@ def scrub_safety(text: str) -> str:
 def mock_summarize(symptoms: str, medications: str, allergies: str, preferred_language: str) -> dict:
     """
     Deterministic rule-based backup summarizer.
-    Ensures that the app functions correctly even if the Claude API key is missing or fails.
+    Produces a structured administrative narrative instead of verbatim patient text.
     """
     emergency_keywords = [
         "chest pain", "shortness of breath", "breathing difficulty", "difficulty breathing",
         "bleeding", "unconscious", "stroke", "heart attack", "numbness", "paralysis",
         "suicide", "self-harm"
     ]
-    
+
     symptoms_lower = symptoms.lower() if symptoms else ""
     is_emergency = any(kw in symptoms_lower for kw in emergency_keywords)
-    
+
     flags = []
+
     if is_emergency:
-        summary = f"Emergency symptoms reported: '{symptoms}'. Route to clinician immediately."
+        # Extract which emergency keywords were found
+        found = [kw for kw in emergency_keywords if kw in symptoms_lower]
+        kw_list = ", ".join(found)
+        summary = (
+            f"Intake flagged for urgent review. Patient reported symptoms consistent with "
+            f"a potential emergency: {kw_list}. Immediate clinician assessment required."
+        )
         flags.append("URGENT CLINICAL REVIEW REQUIRED")
-        draft = "Hello, we noticed your intake form indicates severe symptoms. A staff member will contact you immediately, or please call 911 if this is a life-threatening emergency."
+        draft = (
+            "Hello, we have received your intake form. Your reported symptoms require "
+            "immediate attention. A staff member will contact you shortly. If you are "
+            "experiencing a life-threatening emergency, please call 911 immediately."
+        )
     else:
-        # A simple mock summary that is concise rather than verbatim quoting if symptoms is long
-        symptom_summary = symptoms.strip()
-        if len(symptom_summary) > 80:
-            first_sentence = symptom_summary.split(".")[0].strip()
-            if len(first_sentence) < 30:
-                symptom_summary = symptom_summary[:80] + "..."
+        # --- Build a structured administrative narrative ---
+        parts = []
+
+        # 1. Paraphrase the chief complaint
+        if symptoms and symptoms.strip():
+            raw = symptoms.strip()
+            # Split into sentences and use the first two for the summary
+            sentences = [s.strip() for s in raw.replace("?", ".").split(".") if s.strip()]
+            if len(sentences) == 0:
+                chief = raw[:120] + ("…" if len(raw) > 120 else "")
+            elif len(sentences) == 1:
+                chief = sentences[0] + "."
             else:
-                symptom_summary = first_sentence + "."
-        summary = f"Patient reports symptoms: {symptom_summary}"
-        
-        if medications and medications.lower() != "none":
-            summary += f" Medications: {medications}."
-        if allergies and allergies.lower() != "none":
-            summary += f" Allergies: {allergies}."
-            
-        if not allergies or allergies.lower() in ["none", "n/a", "no"]:
-            flags.append("No allergies reported")
+                chief = sentences[0] + ". " + sentences[1] + "."
+            parts.append(f"Patient presents with: {chief}")
         else:
-            flags.append(f"Patient reported allergy: {allergies}")
-            
-        draft = f"Hi, thank you for submitting your intake form. We have successfully received it and look forward to your visit. Preferred language: {preferred_language}."
-        
-    # Apply safety scrubbing to all text outputs
+            parts.append("No chief complaint documented.")
+
+        # 2. Medications
+        meds = (medications or "").strip()
+        if meds and meds.lower() not in ["none", "n/a", "no", ""]:
+            parts.append(f"Current medications reported: {meds}.")
+        else:
+            parts.append("No current medications reported.")
+
+        # 3. Allergies
+        allg = (allergies or "").strip()
+        if allg and allg.lower() not in ["none", "n/a", "no", ""]:
+            parts.append(f"Known allergies: {allg}.")
+            flags.append(f"Allergy on record: {allg}")
+        else:
+            parts.append("No known allergies reported.")
+            flags.append("No allergies on file — confirm with patient at check-in.")
+
+        # 4. Language preference
+        lang = preferred_language or "English"
+        if lang.lower() != "english":
+            parts.append(f"Preferred language: {lang} — interpreter may be required.")
+            flags.append(f"Non-English language preference: {lang}")
+
+        summary = " ".join(parts)
+
+        # Draft follow-up message
+        missing_info_hints = []
+        if not meds or meds.lower() in ["none", "n/a", ""]:
+            missing_info_hints.append("current medications")
+        if not allg or allg.lower() in ["none", "n/a", ""]:
+            missing_info_hints.append("allergy details")
+
+        if missing_info_hints:
+            hint_str = " and ".join(missing_info_hints)
+            draft = (
+                f"Hi, thank you for completing your intake form. To ensure the best care, "
+                f"could you please provide more detail on your {hint_str} before your appointment? "
+                f"You can update this via our patient portal or call the clinic directly."
+            )
+        else:
+            draft = (
+                "Hi, thank you for submitting your intake form. We have received all the "
+                "information we need and look forward to seeing you at your appointment."
+            )
+
     return {
         "summary": scrub_safety(summary),
         "flags": [scrub_safety(f) for f in flags],

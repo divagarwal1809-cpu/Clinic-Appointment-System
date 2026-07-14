@@ -1,17 +1,17 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from typing import List, Optional
 from datetime import datetime
 
 # Patient Schemas
 class PatientBase(BaseModel):
-    full_name: str
-    dob: str  # YYYY-MM-DD
-    gender: Optional[str] = None
-    phone: str
-    email: str
-    address: str
-    emergency_contact_name: str
-    emergency_contact_phone: str
+    full_name: str = Field(..., min_length=1, max_length=100)
+    dob: str = Field(..., pattern=r"^\d{4}-\d{2}-\d{2}$")  # YYYY-MM-DD
+    gender: Optional[str] = Field(None, max_length=30)
+    phone: str = Field(..., min_length=5, max_length=30)
+    email: str = Field(..., min_length=5, max_length=150)
+    address: str = Field(..., max_length=300)
+    emergency_contact_name: str = Field(..., max_length=100)
+    emergency_contact_phone: str = Field(..., max_length=30)
 
 class PatientCreate(PatientBase):
     pass
@@ -26,14 +26,14 @@ class PatientResponse(PatientBase):
 
 # Appointment Schemas
 class AppointmentBase(BaseModel):
-    clinician_name: str
-    department: str
-    appointment_date: str  # YYYY-MM-DD
-    appointment_time: str  # HH:MM
-    reason_for_visit: str
+    clinician_name: str = Field(..., max_length=150)
+    department: str = Field(..., max_length=100)
+    appointment_date: str = Field(..., pattern=r"^\d{4}-\d{2}-\d{2}$")  # YYYY-MM-DD
+    appointment_time: str = Field(..., pattern=r"^\d{2}:\d{2}$")         # HH:MM
+    reason_for_visit: str = Field(..., max_length=500)
 
 class AppointmentCreate(AppointmentBase):
-    patient_id: str
+    patient_id: str = Field(..., max_length=50)
 
 class AppointmentResponse(AppointmentBase):
     appointment_id: str
@@ -48,19 +48,27 @@ class AppointmentResponse(AppointmentBase):
     }
 
 class AppointmentStatusUpdate(BaseModel):
-    status: str
-    changed_by: Optional[str] = "staff"
+    status: str = Field(..., max_length=30)
+    changed_by: Optional[str] = Field("staff", max_length=100)
+
+    @field_validator("status")
+    @classmethod
+    def validate_status(cls, v: str) -> str:
+        allowed = {"requested", "confirmed", "checked_in", "completed", "cancelled", "no_show"}
+        if v not in allowed:
+            raise ValueError(f"status must be one of {sorted(allowed)}")
+        return v
 
 # Intake Form Schemas
 class IntakeFormCreate(BaseModel):
-    appointment_id: str
-    patient_id: str
-    symptoms_description: str
-    current_medications: Optional[str] = ""
-    allergies: Optional[str] = ""
-    insurance_provider: Optional[str] = ""
-    insurance_id: Optional[str] = ""
-    preferred_language: Optional[str] = "English"
+    appointment_id: str = Field(..., max_length=50)
+    patient_id: str = Field(..., max_length=50)
+    symptoms_description: str = Field(..., min_length=1, max_length=2000)
+    current_medications: Optional[str] = Field("", max_length=500)
+    allergies: Optional[str] = Field("", max_length=500)
+    insurance_provider: Optional[str] = Field("", max_length=150)
+    insurance_id: Optional[str] = Field("", max_length=100)
+    preferred_language: Optional[str] = Field("English", max_length=50)
     consent_given: bool
 
 class IntakeFormResponse(BaseModel):
@@ -86,11 +94,11 @@ class IntakeFormResponse(BaseModel):
 
 # FollowUp Schemas
 class FollowUpBase(BaseModel):
-    appointment_id: str
-    patient_id: str
-    followup_type: str  # missing_info_request/appointment_reminder/post_visit_check
-    message_draft: Optional[str] = None
-    status: str  # draft/approved/sent/acknowledged
+    appointment_id: str = Field(..., max_length=50)
+    patient_id: str = Field(..., max_length=50)
+    followup_type: str = Field(..., max_length=60)  # missing_info_request/appointment_reminder/post_visit_check
+    message_draft: Optional[str] = Field(None, max_length=3000)
+    status: str = Field(..., max_length=30)          # draft/approved/sent/acknowledged
     scheduled_send_at: Optional[datetime] = None
     sent_at: Optional[datetime] = None
 
@@ -103,8 +111,8 @@ class FollowUpResponse(FollowUpBase):
     }
 
 class FollowUpStatusUpdate(BaseModel):
-    status: str
-    message_draft: Optional[str] = None
+    status: str = Field(..., max_length=30)
+    message_draft: Optional[str] = Field(None, max_length=3000)
 
 # Audit Log Schema
 class AuditLogResponse(BaseModel):
@@ -129,19 +137,18 @@ class DashboardSummaryResponse(BaseModel):
     recent_audit_logs: List[AuditLogResponse]
 
 class CombinedBookingRequest(BaseModel):
-    full_name: str
-    dob: str  # YYYY-MM-DD
-    phone: str
-    email: str
-    department: str
-    appointment_date: str  # YYYY-MM-DD
-    appointment_time: str  # HH:MM
-    clinician_name: Optional[str] = "To be assigned"
-    symptoms_description: str
-    current_medications: Optional[str] = ""
-    allergies: Optional[str] = ""
-    insurance_provider: Optional[str] = ""
-    insurance_id: Optional[str] = ""
-    preferred_language: Optional[str] = "English"
+    full_name: str = Field(..., min_length=1, max_length=100)
+    dob: str = Field(..., pattern=r"^\d{4}-\d{2}-\d{2}$")  # YYYY-MM-DD
+    phone: str = Field(..., min_length=5, max_length=30)
+    email: str = Field(..., min_length=5, max_length=150)
+    department: str = Field(..., max_length=100)
+    appointment_date: str = Field(..., pattern=r"^\d{4}-\d{2}-\d{2}$")  # YYYY-MM-DD
+    appointment_time: str = Field(..., pattern=r"^\d{2}:\d{2}$")         # HH:MM
+    clinician_name: Optional[str] = Field("To be assigned", max_length=150)
+    symptoms_description: str = Field(..., min_length=1, max_length=2000)
+    current_medications: Optional[str] = Field("", max_length=500)
+    allergies: Optional[str] = Field("", max_length=500)
+    insurance_provider: Optional[str] = Field("", max_length=150)
+    insurance_id: Optional[str] = Field("", max_length=100)
+    preferred_language: Optional[str] = Field("English", max_length=50)
     consent_given: bool
-

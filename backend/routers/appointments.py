@@ -1,9 +1,13 @@
+import json
+import logging
 import datetime
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from backend.models.database import get_db, Appointment, Patient, AuditLog, IntakeForm
+from backend.models.database import get_db, Appointment, Patient, AuditLog, IntakeForm, FollowUp
 from backend.schemas.schemas import AppointmentCreate, AppointmentResponse, AppointmentStatusUpdate, IntakeFormResponse, CombinedBookingRequest
-import json
+from backend.services.ai_summarizer import summarize_intake
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/appointments", tags=["appointments"])
 
@@ -129,7 +133,42 @@ def book_appointment_with_intake(data: CombinedBookingRequest, db: Session = Dep
     )
     db.add(db_intake)
     db.commit()
-    
+    db.refresh(db_intake)
+
+    # --- Auto-run AI summarization so the summary is never null ---
+    try:
+        ai_result = summarize_intake(
+            symptoms=data.symptoms_description,
+            medications=data.current_medications,
+            allergies=data.allergies,
+            preferred_language=data.preferred_language or "English",
+            consent_given=data.consent_given
+        )
+        db_intake.ai_summary = ai_result.get("summary")
+        db_intake.urgent_review_needed = ai_result.get("urgent_review_needed", False)
+        db.commit()
+        db.refresh(db_intake)
+
+        # Create a follow-up draft
+        draft_msg = ai_result.get("follow_up_draft")
+        if draft_msg:
+            missing = json.loads(db_intake.missing_fields)
+            f_type = "missing_info_request" if missing else "appointment_reminder"
+            if db_intake.urgent_review_needed:
+                f_type = "post_visit_check"
+            new_followup = FollowUp(
+                appointment_id=db_appointment.appointment_id,
+                patient_id=patient.patient_id,
+                followup_type=f_type,
+                message_draft=draft_msg,
+                status="draft"
+            )
+            db.add(new_followup)
+            db.commit()
+    except Exception as exc:
+        logger.error(f"Auto-summarization failed during booking: {exc}")
+        # Non-fatal — booking still succeeds without AI summary
+
     db.refresh(db_appointment)
     return db_appointment
 
