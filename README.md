@@ -10,28 +10,26 @@
 
 Front-desk clinic staff routinely juggle appointment scheduling and patient intake forms manually, which leads to missed information, slow follow-ups, and no easy way to spot which patients need attention before their visit.
 
-**ClinicFlow** solves this by giving patients a simple way to book appointments and complete an intake form online, while giving staff a dashboard that:
+**ClinicFlow** solves this by giving patients a simple way to book appointments online, while giving staff a dashboard that:
 - Shows all appointments and patient records in one place
 - Uses an AI model to summarize each patient's intake form into a short, readable draft for staff
 - Flags missing or incomplete fields in intake forms automatically
 - Tracks follow-ups that still need to be completed
 
-The system explicitly does **not** diagnose conditions or recommend treatment — it only supports the administrative workflow around a visit.
+The system explicitly does **not** diagnose conditions or recommend treatment.
 
 ---
 
-## 2. Dataset / Reference Source
+## 2. Reference Source
 
-Following the project's starter-data guidance, the system uses its own generated records rather than a public medical dataset (appropriate, since patient data is sensitive):
+Following the project's starter-data guidance, the system uses its own generated records rather than a public medical dataset:
 
 | File | Purpose |
 |---|---|
 | `patients.csv` | Patient records (name, contact info, history flags) |
 | `appointments.csv` | Booked appointment slots, date/time, status |
 | `intake_forms.csv` | Submitted intake form responses per patient |
-| `followups.csv` | Follow-up items flagged by staff or by the AI module |
-
-**[30-40 demo records were created for testing purposes.]**
+| `followups.csv` | Follow-up items flagged by the AI module |
 
 ---
 
@@ -39,7 +37,7 @@ Following the project's starter-data guidance, the system uses its own generated
 
 | Layer | Technology |
 |---|---|
-| Frontend | HTML, CSS, JavaScript |
+| Frontend | HTML, CSS, JavaScript, Python |
 | Backend | **[FastAPI]** |
 | Database | **[PostgreSQL]** |
 | AI / LLM | **[OpenAI Gemini]** |
@@ -51,16 +49,15 @@ Following the project's starter-data guidance, the system uses its own generated
 ## 4. Project Workflow
 
 1. **Patient books an appointment** through the Patient Portal and fills out the intake form.
-2. **Backend API** receives the booking and intake data and stores it in the database.
-3. **AI module** is called with the intake form content. It:
+2. **Backend API** receives the booking and stores it in the database.
+3. **AI** is called with the intake form content. It:
    - Generates a short administrative summary of the patient's stated concerns
    - Flags any required fields that were left blank or incomplete
    - Drafts a suggested follow-up reminder where needed
 4. **Staff Portal Dashboard** displays appointments, patients, and the AI-generated summaries, with a live Follow-ups counter for anything still needing action.
-5. Staff review the AI draft (clearly labeled as **not medical advice**) and take the appropriate next step manually.
 
 ```
-Patient → Frontend (Book + Intake Form) → Backend API → Database
+Patient → Frontend (Book) → Backend API → Database
                                               ↓
                                           AI Module → Summary + Missing-field flags
                                               ↓
@@ -77,9 +74,9 @@ The AI component is the core innovation of this project:
 - **Missing-field detection** — checks the submitted intake form against required fields and flags what's missing, reducing back-and-forth at check-in.
 - **Follow-up reminder drafts** — generates a short suggested follow-up note (e.g., "confirm insurance details before next visit") that staff can edit or dismiss.
 
-**Why AI helps here:** these are exactly the kind of repetitive, judgment-light administrative tasks (summarizing, checking for gaps, drafting reminders) that an LLM handles reliably, while the actual clinical judgment stays entirely with staff. This is why every AI output in the app carries the disclaimer: *"AI summaries are administrative drafts only — not medical advice."*
+**Why AI helps here:** these are exactly the kind of repetitive, judgment-light administrative tasks that an LLM handles(in this case GEMINI) reliably, while the actual clinical judgment stays entirely with staff. This is why every AI output in the app carries the disclaimer: *"AI summaries are administrative drafts only — not medical advice."*
 
-**[SYSTEM_PROMPT = You are an administrative intake summarizer for clinic front-desk staff.
+SYSTEM_PROMPT = You are an administrative intake summarizer for clinic front-desk staff.
 Your role is purely administrative support.
 CRITICAL SAFETY RULE: You are NOT a doctor or clinician. You must NEVER diagnose the patient, suggest or imply treatment, or interpret symptoms clinically.
 Only restate, in plain factual language, what the patient reported. Do not add medical terms or clinical judgments.
@@ -88,7 +85,7 @@ Never use words like "diagnose", "diagnosis", "prescribe", "prescription", "amox
 Return a structured JSON object containing exactly these keys:
 {
   "summary": "A concise, objective summary of what the patient reported, using plain factual language.",
-  "flags": ["A list of specific plain-language administrative warnings or notes based ONLY on what the patient reported."],
+  "flags": "A list of specific plain-language administrative warnings or notes based ONLY on what the patient reported.",
   "follow_up_draft": "A polite, professional message draft requesting any missing information or reminding them of next steps.",
   "urgent_review_needed": false
 }
@@ -103,50 +100,45 @@ EMERGENCY GUARDRAIL: If the patient's text describes anything resembling a medic
 
 ## 6. How to Run the Project
 
-**[Fill in with your actual setup steps, for example:]**
-
 ```bash
-# 1. Clone the repository
+#1. Clone the repository
 git clone https://github.com/divagarwal1809-cpu/Clinic-Appointment-System
 cd clinic_appointment_and_intake_summary_system
 
-# 2. Install backend dependencies
+#2. Install backend dependencies
 cd backend
-npm install        # or: pip install -r requirements.txt
+npm install
+#or: pip install -r requirements.txt
 
-# 3. Add your AI API key
+#3. Add (any) AI API key
 echo "AI_API_KEY=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" > .env
 
 # 4. Start the backend
-npm start          # or: python app.py
+npm start
+#or: python app.py
 
 # 5. Open the frontend
-# Open index.html in a browser, or serve the /frontend folder
+#Open index.html in a browser
 ```
 
-Live version (frontend only, connected to hosted backend): https://clinicappointment23.netlify.app/
+Live version: (frontend only, connected to hosted backend): https://clinicappointment23.netlify.app/
 
 ---
 
 ## 7. Demo Screenshots
 
-**[Add screenshots here — Dashboard, Book Appointment, Intake Form, AI Summary view, Follow-ups list]**
-
-Example placeholders:
-- `screenshots/dashboard.png`
-- `screenshots/book-appointment.png`
-- `screenshots/ai-summary.png`
-- `screenshots/followups.png`
+<img width="1918" height="880" alt="image" src="https://github.com/user-attachments/assets/8ee74a0d-a45d-4957-8533-aea406d1fb42" /> `screenshots/dashboard.png`
+<img width="1918" height="906" alt="Screenshot 2026-07-10 150215" src="https://github.com/user-attachments/assets/49df32e7-b45c-41f6-8f29-812baad62a4c" /> `screenshots/book-appointment.png`
+<img width="1918" height="880" alt="Screenshot 2026-07-15 022359" src="https://github.com/user-attachments/assets/39a31e59-5999-4310-be5e-d84a19e7311b" /> `screenshots/ai-summary.png`
+<img width="1918" height="917" alt="Screenshot 2026-07-13 105619" src="https://github.com/user-attachments/assets/3ee613af-df79-4f4d-9c81-8e2bb7ebe6cc" /> `screenshots/appointments.png`
 
 ---
 
 ## 8. Results and Insights
 
-**[Fill in with your actual numbers/observations, for example:]**
-- Number of test appointments booked during testing: **[ ]**
-- Number of intake forms processed by the AI module: **[ ]**
-- Example: "AI correctly flagged missing fields in X out of Y test intake forms"
-- Any noticeable pattern in follow-ups generated (e.g., insurance info most commonly missing)
+- Number of test appointments booked during testing: **[40]**
+- Number of intake forms processed by the AI module: **[40]**
+- AI correctly flagged missing fields in 30 out of 40 test intake forms
 
 ---
 
@@ -154,9 +146,9 @@ Example placeholders:
 
 - The AI module produces **administrative drafts only** — it does not diagnose, and staff must review every summary before acting on it.
 - AI summaries are only as good as the intake form content; ambiguous or very short patient input can produce a vague summary.
-- The dataset used is synthetic/test data, not real patient records — real-world clinic data would include more edge cases (multiple languages, incomplete histories, etc.).
+- The dataset used is test data, not real patient records — real world clinic data would include more edge cases.
 - Mobile version is unstable
-- The backend is hosted on Render(free tier) so it might take upto 50 seconds for the server to come live
+- The backend is hosted on Render(free tier) so it might take upto 50 seconds for the server to come live.
 
 ---
 
