@@ -249,8 +249,8 @@ async function renderDashboard(container) {
   try {
     const data = await apiFetch('/dashboard/summary');
 
-    const badge = $('followup-badge');
-    if (badge) badge.textContent = data.pending_followups_count || 0;
+    const followupBadge = $('followup-badge');
+    if (followupBadge) followupBadge.textContent = data.pending_followups_count || 0;
 
     container.innerHTML = `
       <div class="stats-grid">
@@ -616,8 +616,8 @@ async function runSummarize(intakeId) {
 async function renderFollowups(container) {
   try {
     const fups = await apiFetch('/followups');
-    const badge = $('followup-badge');
-    if (badge) badge.textContent = fups.filter(f => f.status === 'draft').length;
+    const followupBadge = $('followup-badge');
+    if (followupBadge) followupBadge.textContent = fups.filter(f => f.status === 'draft').length;
 
     container.innerHTML = `
       <div class="section-header">

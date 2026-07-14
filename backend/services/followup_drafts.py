@@ -1,6 +1,7 @@
 import os
 import logging
-from anthropic import Anthropic
+import httpx
+from backend.services.ai_summarizer import get_gemini_key
 
 logger = logging.getLogger(__name__)
 
@@ -54,15 +55,13 @@ def generate_draft_template(followup_type: str, patient_name: str, details: dict
 
 
 def generate_ai_draft(followup_type: str, patient_name: str, details: dict) -> str:
-    """Generates an AI-drafted message with the Claude API or falls back to templates."""
-    api_key = os.environ.get("ANTHROPIC_API_KEY")
-    if not api_key:
-        logger.warning("ANTHROPIC_API_KEY not set. Using template for followup draft.")
+    """Generates an AI-drafted message with the Google Gemini API or falls back to templates."""
+    gemini_key = get_gemini_key()
+    if not gemini_key:
+        logger.warning("Gemini API key not available. Using template for followup draft.")
         return generate_draft_template(followup_type, patient_name, details)
         
     try:
-        client = Anthropic(api_key=api_key)
-        
         if followup_type == "missing_info_request":
             fields = details.get("missing_fields", [])
             prompt = f"Draft a polite email to {patient_name} asking them to provide the following missing fields from their intake form: {', '.join(fields)}."
@@ -73,18 +72,25 @@ def generate_ai_draft(followup_type: str, patient_name: str, details: dict) -> s
         else:
             prompt = f"Draft an administrative update email to patient {patient_name}."
             
-        message = client.messages.create(
-            model="claude-3-haiku-20240307",
-            max_tokens=500,
-            system=SYSTEM_PROMPT,
-            messages=[
-                {"role": "user", "content": prompt}
-            ],
-            temperature=0.7
-        )
+        url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
+        payload = {
+            "contents": [{"parts": [{"text": prompt}]}],
+            "systemInstruction": {"parts": [{"text": SYSTEM_PROMPT}]},
+            "generationConfig": {
+                "temperature": 0.7
+            }
+        }
+        headers = {
+            "Content-Type": "application/json",
+            "x-goog-api-key": gemini_key
+        }
+        resp = httpx.post(url, json=payload, headers=headers, timeout=30.0)
+        resp.raise_for_status()
         
-        return message.content[0].text.strip()
+        res_data = resp.json()
+        response_text = res_data["candidates"][0]["content"]["parts"][0]["text"].strip()
+        return response_text
         
     except Exception as e:
-        logger.error(f"Failed to generate draft with Claude: {e}. Falling back to template.")
+        logger.error(f"Failed to generate draft with Gemini: {e}. Falling back to template.")
         return generate_draft_template(followup_type, patient_name, details)

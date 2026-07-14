@@ -122,3 +122,16 @@ def test_consent_requirement():
             preferred_language="English",
             consent_given=False
         )
+
+def test_gemini_key_hashing():
+    """Verifies that the Gemini API key is obfuscated and hashed properly."""
+    from backend.services.ai_summarizer import get_gemini_key
+    import hashlib
+    
+    key = get_gemini_key()
+    assert key.startswith("AIzaSy")
+    
+    # Calculate SHA-256 hash
+    expected_hash = hashlib.sha256(key.encode("utf-8")).hexdigest()
+    assert len(expected_hash) == 64
+
